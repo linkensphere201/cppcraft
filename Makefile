@@ -12,8 +12,10 @@ lib_pb := protobuf-3.14.0
 src_pb := protobuf-cpp-3.14.0.tar.gz
 bin_pb := protoc-3.14.0-linux-x86_64.zip
 
+lib_rocksdb := rocksdb-6.15.2
+src_rocksdb := rocksdb-v6.15.2.tar.gz
 
-all: prepare curl spdlog protobuf
+all: prepare curl spdlog protobuf rocksdb
 	@tree $(targetdir)
 
 prepare:
@@ -44,6 +46,19 @@ protobuf:
 	cd $(builddir)/$(lib_pb); ./configure --prefix=$(targetdir)/$(lib_pb);
 	make -C $(builddir)/$(lib_pb) -j 4 && make -C $(builddir)/$(lib_pb) install
 
+rocksdb: 
+	@echo "build : $(lib_rocksdb)"
+	@echo "target: $(targetdir)/$(lib_rocksdb)"
+	mkdir -p $(targetdir)/$(lib_rocksdb)/bin
+	mkdir -p $(targetdir)/$(lib_rocksdb)/libs
+	mkdir -p $(targetdir)/$(lib_rocksdb)/include
+	tar zxvf $(basedir)/$(src_rocksdb) -C $(builddir)
+	make -C $(builddir)/$(lib_rocksdb) ldb sst_dump
+	make -C $(builddir)/$(lib_rocksdb) static_lib
+	cp $(builddir)/$(lib_rocksdb)/librocksdb*.a $(targetdir)/$(lib_rocksdb)/libs
+	cp $(builddir)/$(lib_rocksdb)/ldb $(targetdir)/$(lib_rocksdb)/bin
+	cp $(builddir)/$(lib_rocksdb)/sst_dump $(targetdir)/$(lib_rocksdb)/bin
+	cp $(builddir)/$(lib_rocksdb)/include $(targetdir)/$(lib_rocksdb)/ -r
 
 .PTHONY:
 clean:
