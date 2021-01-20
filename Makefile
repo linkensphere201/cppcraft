@@ -17,7 +17,9 @@ src_rocksdb := rocksdb-v6.15.2.tar.gz
 
 lib_gtest := gtest
 
-all: prepare curl spdlog protobuf rocksdb gtest
+lib_gperftools := gperftools
+
+all: prepare curl spdlog protobuf rocksdb gtest gperftools
 	@tree $(targetdir)
 
 prepare:
@@ -68,6 +70,12 @@ gtest:
 	mkdir -p $(builddir)/$(lib_gtest)
 	mkdir -p $(targetdir)/$(lib_gtest)
 	cd $(builddir)/$(lib_gtest); cmake $(basedir)/$(lib_gtest) -DCMAKE_INSTALL_PREFIX=$(targetdir)/$(lib_gtest) && make && make install
+
+gperftools:
+	@echo "build : $(lib_gperftools)"
+	@echo "target: $(targetdir)/$(lib_gperftools)"
+	mkdir -p $(targetdir)/$(lib_gperftools)
+	cd $(basedir)/$(lib_gperftools) && ./autogen.sh && ./configure --prefix=$(targetdir)/$(lib_gperftools) && make && make install
 
 .PTHONY:
 clean:
