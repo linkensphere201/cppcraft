@@ -15,7 +15,9 @@ bin_pb := protoc-3.14.0-linux-x86_64.zip
 lib_rocksdb := rocksdb-6.15.2
 src_rocksdb := rocksdb-v6.15.2.tar.gz
 
-all: prepare curl spdlog protobuf rocksdb
+lib_gtest := gtest
+
+all: prepare curl spdlog protobuf rocksdb gtest
 	@tree $(targetdir)
 
 prepare:
@@ -59,6 +61,13 @@ rocksdb:
 	cp $(builddir)/$(lib_rocksdb)/ldb $(targetdir)/$(lib_rocksdb)/bin
 	cp $(builddir)/$(lib_rocksdb)/sst_dump $(targetdir)/$(lib_rocksdb)/bin
 	cp $(builddir)/$(lib_rocksdb)/include $(targetdir)/$(lib_rocksdb)/ -r
+
+gtest:
+	@echo "build : $(lib_gtest)"
+	@echo "target: $(targetdir)/$(lib_gtest)"
+	mkdir -p $(builddir)/$(lib_gtest)
+	mkdir -p $(targetdir)/$(lib_gtest)
+	cd $(builddir)/$(lib_gtest); cmake $(basedir)/$(lib_gtest) -DCMAKE_INSTALL_PREFIX=$(targetdir)/$(lib_gtest) && make && make install
 
 .PTHONY:
 clean:
