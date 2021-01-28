@@ -1,12 +1,12 @@
-// keywords:
+// keywords: misc
 //
 
-#define TOPIC "misc"
 #include <gtest/gtest.h>
 #include <iostream>
+#include "log.h"
 
 void ShowTopic() {
-  std::cout << "topic: " << TOPIC << std::endl;
+  log_info("Topic: " "misc");
 }
 
 TEST(misc, ShowTopic) {
@@ -15,5 +15,6 @@ TEST(misc, ShowTopic) {
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
+  cp1craft::common::init_log_module(); 
   return RUN_ALL_TESTS();
 }

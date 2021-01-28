@@ -18,7 +18,7 @@ TEST($TOPIC, ShowTopic) {
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  common::init_log_module(); 
+  cp1craft::common::init_log_module(); 
   return RUN_ALL_TESTS();
 }"
 
