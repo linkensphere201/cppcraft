@@ -1,0 +1,43 @@
+
+concurrent:
+*condition_variables
+ - condition_variable_any
+
+*mutexes
+ - timed_mutex
+*locks
+ - unique_lock
+ - adopt_lock
+
+
+
+misc:
+Slice
+SlicePart
+LocalSavePoint
+
+======== a design pattern of Thread ===========
+
++--------------+        +--------------+
+| Thread       |        |   Runable    | 
++--------------++       +----------+---+
+|  ::detach     |   +-->| ::run()  |   
+|  ::join       |   |   +----+-----+   
+|  ::threadMain +---+        |
++---------------+            |
+                             |
+                         +---+-------+
+                         | xxxThread |
+                         +--------+--+
+                         | ::run  +--------> check an outside state to find if need to exit myself.
+                         +--------+
+
+WriteBatch --- WriteBatchInternal
+
+
+
+
+DB::Put
+  |
+  |
+WriteBatch
