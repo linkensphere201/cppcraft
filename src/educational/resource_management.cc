@@ -13,19 +13,6 @@
 #include <iostream>
 
 
-void ThreadSafety_of_shared_ptr() {
-  // please check: 
-  //  1. https://www.boost.org/doc/libs/1_75_0/libs/smart_ptr/doc/html/smart_ptr.html#shared_ptr_thread_safety
-  //  2. linux服务端多线程编程（muduo）: Section 1.9
-  auto GetOrSetPtr = [] () {
-  };
-}
-
-void Use_make_shared() {
-  // check: 
-  //  1. https://stackoverflow.com/questions/20895648/difference-in-make-shared-and-normal-shared-ptr-in-c
-  //  2. cn: https://www.cnblogs.com/leijiangtao/p/12046333.html
-}
 
 void Use_weak_ptr() {
   // check:

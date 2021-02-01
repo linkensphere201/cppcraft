@@ -16,7 +16,7 @@ Slice
 SlicePart
 LocalSavePoint
 
-======== a design pattern of Thread ===========
+======== a design pattern of Thread(thrift) ===========
 
 +--------------+        +--------------+
 | Thread       |        |   Runable    | 
@@ -29,11 +29,10 @@ LocalSavePoint
                          +---+-------+
                          | xxxThread |
                          +--------+--+
-                         | ::run  +--------> check an outside state to find if need to exit myself.
+                         | ::run  +--------> Periodly check an outside state to find if need to exit myself.
                          +--------+
 
 WriteBatch --- WriteBatchInternal
-
 
 
 
@@ -41,3 +40,49 @@ DB::Put
   |
   |
 WriteBatch
+
+=========================================================
+
+
+
+
+
+
+===========================
+env |
+
+
+```
+kDefaultPageSize
+
+CpuPriority
+
+EnvOptions {
+	use_mmap_reads
+	use_mmap_writes
+	use_direct_reads
+	use_direct_writes
+
+	allow_fallocate
+	set_fd_cloexec
+	bytes_per_sync
+	strict_bytes_per_sync
+	fallocate_with_keep_size
+
+	compaction_readahead_size 		(0)
+	random_access_max_buffer_size 	(0)
+	writable_file_max_buffer_size 	(1024*1024)
+
+	rate_limiter
+}
+```
+
+
+MockEnv ----> CompositeEnvWrapper ---> Env
+ |---> MockFileSystem ---> FileSystem
+        +---> NewSequentialFile
+        +---> NewWritableFile
+        +---> DeleteFile
+        +---> ...
+
+

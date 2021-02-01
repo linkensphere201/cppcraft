@@ -11,7 +11,8 @@ EXESRCS := $(shell ls *.cc)
 EXES 		:= $(EXESRCS:.cc=.out)
 
 CXX 			:= g++
-CXXFLAGS 	:= -I$(inc_this_dir)		\
+CXXFLAGS 	:= -std=c++11 -O0 -ggdb \
+	-I$(inc_this_dir)		\
 	-I$(SPDLOG_DIR)/include 				\
 	-I$(libdir)/$(libgtest)/include
 
