@@ -59,12 +59,15 @@ TEST(Extent, move) {
   // do_move(std::move(ex));
   // in whole scope there would be only one object
   
-
   Extent ex(new uchar_t [64], 64, do_del);
   Extent ex2(std::move(ex));
   // ex(the object who is moved-from) & ex2 would both be release.
+}
 
-  // Extent ex0(new uchar_t [64], 64, do_del);
+// how to move an object into & out of a container?
+//
+TEST(Move, Container) {
+
 }
 
 int main(int argc, char **argv) {

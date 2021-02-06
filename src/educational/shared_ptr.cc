@@ -172,6 +172,26 @@ void Use_make_shared() {
   //  2. cn: https://www.cnblogs.com/leijiangtao/p/12046333.html
 }
 
+void Use_enable_shared_from_this () {
+  // check: 
+  //  1. https://blog.csdn.net/ws891033655/article/details/40558837
+  //  2. check the impl of boost
+}
+
+class App2 : public App {
+  public:
+    std::shared_ptr<App2> App2Fuck() {
+      std::shared_ptr<App2> x(this); // would cause this to be destoried twice!
+      return x;
+    }
+};
+
+TEST(sharedptr, shared_from_this) {
+  App2 x;
+  x.App2Fuck();
+}
+
+
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   cp1craft::common::init_log_module(); 

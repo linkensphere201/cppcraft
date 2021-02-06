@@ -12,8 +12,9 @@ EXES 		:= $(EXESRCS:.cc=.out)
 
 CXX 			:= g++
 CXXFLAGS 	:= -std=c++11 -O0 -ggdb \
+	-fno-elide-constructors \
 	-I$(inc_this_dir)		\
-	-I$(SPDLOG_DIR)/include 				\
+	-I$(SPDLOG_DIR)/include \
 	-I$(libdir)/$(libgtest)/include
 
 LDFLAGS  	:= -L$(lib_this_dir)		\

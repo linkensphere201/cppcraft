@@ -5,7 +5,7 @@
 
 namespace cp1craft {
 namespace common {
-
+using LoggerPtr = std::shared_ptr<spdlog::logger>;
 extern std::shared_ptr<spdlog::logger> g_console;
 
 void init_log_module();

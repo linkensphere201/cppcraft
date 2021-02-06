@@ -4,6 +4,7 @@
 
 namespace cp1craft {
 namespace common {
+
 std::shared_ptr<spdlog::logger> g_console;
 void init_log_module() {
   g_console = spdlog::stdout_color_mt("console");
