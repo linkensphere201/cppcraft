@@ -1,26 +1,20 @@
-libdir := $(CURDIR)/../../staticlibs
-libgtest := gtest
-
-SPDLOG_DIR := $(libdir)/spdlog-1.8.2
-SPDLOG_LIB := spdlog
-
-lib_this_dir := $(CURDIR)/../libs
-inc_this_dir := $(CURDIR)/../include
-
 EXESRCS := $(shell ls *.cc)
 EXES 		:= $(EXESRCS:.cc=.out)
+
+include ../depends.mk
 
 CXX 			:= g++
 CXXFLAGS 	:= -std=c++11 -O0 -ggdb \
 	-fno-elide-constructors \
-	-I$(inc_this_dir)		\
-	-I$(SPDLOG_DIR)/include \
-	-I$(libdir)/$(libgtest)/include
+	-I$(mylib_inc)		\
+	-I$(gtest_inc) 		\
+	-I$(spdlog_inc)
 
-LDFLAGS  	:= -L$(lib_this_dir)		\
-	-L$(libdir)/$(libgtest)/lib64 	\
-	-lcommon												\
-	-lgtest 												\
+LDFLAGS  	:= -L$(mylib_dir)		\
+	-L$(gtest_libdir) 	\
+	-L$(spdlog_libdir)	\
+	-lcommon						\
+	-lgtest 						\
 	-lpthread
 
 $(EXES): %.out:%.cc
