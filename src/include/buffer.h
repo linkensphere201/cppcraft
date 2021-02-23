@@ -1,4 +1,5 @@
 #pragma once
+#include "log.h"
 
 namespace cp1craft {
 namespace io {
@@ -52,23 +53,22 @@ class Extent {
 class Buffer {
  public:
   using uchar_t = Extent::uchar_t;
-  void PutUint32(uint32_t u);
-  void PutBytes(uchar_t *p, uint32_t n);
-  void PutString(const std::string &s);
+  virtual void PutUint32(uint32_t u);
+  virtual void PutString(const std::string &s);
+  virtual void PutBytes(uchar_t *p, uint32_t n);
+
   void FinishPut() { eof_put_ = true; }
   bool IsPutFinished() { return eof_put_; }
 
-  void PeakUint32(uint32_t &x);
-  void PeakBytes(uint32_t n, void *&p);
-  void PeakString(std::string &s);
-  bool IsPeakFinished();
+  virtual void PeekUint32(uint32_t &x);
+  virtual void PeekBytes(uint32_t n, void *&p);
+  virtual void PeekString(std::string &s);
+  virtual bool IsPeakFinished();
 
   static std::shared_ptr<Buffer> NewBuffer();
+  static std::shared_ptr<Buffer> NewBuffer(uint32_t sz, cp1craft::utils::LoggerPtr logger);
 
  private:
-  class BufferImpl;
-
-  BufferImpl *impl_;
   bool eof_put_;
 };
 

@@ -68,6 +68,6 @@ TEST(container, ifmove) {
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  cp1craft::common::init_log_module(); 
+  cp1craft::utils::init_log_module(); 
   return RUN_ALL_TESTS();
 }

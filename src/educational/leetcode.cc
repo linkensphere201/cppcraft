@@ -142,7 +142,7 @@ class Solution {
       last = newadd;
       p1 = p1->next;
       p2 = p2->next;
-    }  // common part
+    }  // utils part
 
     tailp = p1 != nullptr ? p1 : p2;
     while (last != nullptr && tailp != nullptr) {
@@ -438,6 +438,6 @@ TEST(lc1206, sol) {
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  cp1craft::common::init_log_module();
+  cp1craft::utils::init_log_module();
   return RUN_ALL_TESTS();
 }

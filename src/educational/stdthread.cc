@@ -39,7 +39,7 @@ TEST(stdthread, threadid) {
 }
 
 int main(int argc, char **argv) {
-  common::init_log_module(); 
+  utils::init_log_module(); 
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

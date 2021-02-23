@@ -3,7 +3,7 @@
 #include "log.h"
 
 namespace cp1craft {
-namespace common {
+namespace utils {
 
 std::shared_ptr<spdlog::logger> g_console;
 void init_log_module() {
@@ -12,5 +12,5 @@ void init_log_module() {
   spdlog::set_level(spdlog::level::debug);
   spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e [thread %t] %l %v");
 }
-} // namespace common
+} // namespace utils
 } // namespace cp1craft
