@@ -19,6 +19,8 @@ lib_gtest := gtest
 
 lib_gperftools := gperftools
 
+lib_fmt := fmt
+
 all: prepare curl spdlog protobuf rocksdb gtest gperftools
 	@tree $(targetdir)
 
@@ -76,6 +78,13 @@ gperftools:
 	@echo "target: $(targetdir)/$(lib_gperftools)"
 	mkdir -p $(targetdir)/$(lib_gperftools)
 	cd $(basedir)/$(lib_gperftools) && ./autogen.sh && ./configure --prefix=$(targetdir)/$(lib_gperftools) && make && make install
+
+fmt:
+	@echo "build : $(lib_fmt)"
+	@echo "target: $(targetdir)/$(lib_fmt)"
+	mkdir -p $(builddir)/$(lib_fmt)
+	mkdir -p $(targetdir)/$(lib_fmt)
+	cd $(builddir)/$(lib_fmt); cmake $(basedir)/$(lib_fmt) -DCMAKE_INSTALL_PREFIX=$(targetdir)/$(lib_fmt) && make && make install
 
 .PTHONY:
 clean:

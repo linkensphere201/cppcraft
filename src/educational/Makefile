@@ -8,13 +8,17 @@ CXXFLAGS 	:= -std=c++11 -O0 -ggdb \
 	-fno-elide-constructors \
 	-I$(mylib_inc)		\
 	-I$(spdlog_inc)		\
-	-I$(gtest_inc)
+	-I$(gtest_inc)    \
+	-I$(fmt_inc)
 
 LDFLAGS  	:= -L$(mylib_dir)		\
 	-L$(gtest_libdir) 	\
 	-L$(spdlog_libdir)	\
+	-L$(fmt_libdir)			\
 	-lutils							\
-	-lgtest 						\
+	-l$(gtest_lib) 			\
+	-l$(spdlog_lib)			\
+	-l$(fmt_lib)				\
 	-lpthread
 
 all: $(EXES)

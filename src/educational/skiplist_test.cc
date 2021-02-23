@@ -22,6 +22,14 @@ TEST(comparator, basic) {
 
 #include <chrono>
 #include <sstream>
+#include <fmt/core.h>
+
+
+/*
+ * syntax of formats:
+ * https://fmt.dev/latest/syntax.html
+ * */
+
 TEST(skiplist, getlevel) {
   auto seed = std::chrono::system_clock::now().time_since_epoch().count();
   Skiplist<int> skl(seed);
@@ -32,10 +40,18 @@ TEST(skiplist, getlevel) {
 
   std::stringstream ss;
   log_info("branching factor: {}", ((double)Skiplist<int>::kP_ / (double)Skiplist<int>::kPMax_));
-  for (auto & i : LvlCount) {
-    ss << i << ",";
+
+  log_info("level counts:");
+  for (int i = 0; i < Skiplist<int>::kMaxLvl_; i++) {
+    ss << fmt::format("{:<3d} |", i);
   }
-  log_info("lvl count: {}", ss.str());
+  log_info("{}", ss.str());
+  
+  ss.str("");
+  for (auto & i : LvlCount) {
+    ss << fmt::format("{:<3d} |", i);
+  }
+  log_info("{}", ss.str());
 }
 
 int main(int argc, char **argv) {

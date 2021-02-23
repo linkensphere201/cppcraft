@@ -24,3 +24,7 @@ gtest_dir := $(DepRoot)/gtest
 gtest_inc := $(gtest_dir)/include
 gtest_libdir := $(gtest_dir)/lib64
 
+fmt_lib := fmt
+fmt_dir := $(DepRoot)/fmt
+fmt_inc := $(fmt_dir)/include
+fmt_libdir := $(fmt_dir)/lib64
