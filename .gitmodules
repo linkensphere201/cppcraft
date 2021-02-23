@@ -4,3 +4,6 @@
 [submodule "thirdparty/sources/gperftools"]
 	path = thirdparty/sources/gperftools
 	url = https://github.com/gperftools/gperftools.git
+[submodule "thirdparty/sources/fmt"]
+	path = thirdparty/sources/fmt
+	url = https://github.com/fmtlib/fmt.git
