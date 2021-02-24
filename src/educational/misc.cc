@@ -31,7 +31,7 @@ public:
 
 class Xderived : public Base {
 public:
-  void dosome() override; // note that this function is override base class
+  void dosome() override; // note that this function is override some virtual member function base class
   // void dosome() const override; 
     // compile failed: error: ‘void Xderived::dosome() const’ marked ‘override’, but does not override
     // because of no function found in base class
@@ -138,6 +138,9 @@ TEST(misc, nested_template_class ) {
   A<int> a(100);
   log_info("test: {}", a.b_->get());
 }
+
+
+
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
