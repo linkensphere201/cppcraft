@@ -10,6 +10,9 @@
 
 #include "log.h"
 
+namespace cp1craft {
+namespace utils {
+
 template<typename Key>
 class Comparator {
 public:
@@ -60,18 +63,7 @@ private:
   void *val_;
 };
 
-// a formatter for SimpleKeyHandle
-template<>
-struct fmt::formatter<SimpleKeyHandle> : fmt::formatter<std::string> {
-  template<typename FormatContext>
-  auto format(const SimpleKeyHandle &skh, FormatContext &ctx)
-      -> decltype(ctx.out()) {
-    return fmt::formatter<std::string>::format(skh.ToString(false), ctx);
-  }
-};
-
 //
-// TODO - `Key` should be designed as a handle
 //
 template<typename Key>
 class Skiplist {
@@ -88,7 +80,9 @@ public:
   ~Skiplist();
 
   bool Insert(const Key &k);
-  bool Remove(const Key &k);
+
+  using HookOnRemove = std::function<void(Key &)>;
+  bool Remove(const Key &k, HookOnRemove f);
 
   using HookOnFound = std::function<void(const Key &, Key &)>;
   bool Search(Key &k, HookOnFound f);
@@ -110,17 +104,17 @@ private:
 
   Comparator<Key> *cmp_;
   Policy plc_;
-
   Node *head_;
   std::list<Node *> alloc_track_;
   int curr_lvl_;
+  int node_count_;
   // current level: [0, curr_lvl_]
 };
 
 template<typename Key>
 Skiplist<Key>::Skiplist(int seed, int policy)
     : generator_(seed), dist_(1, kPMax_), cmp_(GetDefComparator<Key>()),
-      plc_(policy), head_(nullptr), curr_lvl_(0) {
+      plc_(policy), head_(nullptr), curr_lvl_(0), node_count_(0) {
   head_ = newNode(Key{}, kMaxLvl_); // a default value of Key
 }
 
@@ -166,35 +160,93 @@ bool Skiplist<Key>::Insert(const Key &k) {
 }
 
 template<typename Key>
-bool Skiplist<Key>::Remove(const Key &k) {
+bool Skiplist<Key>::Remove(const Key &k, Skiplist<Key>::HookOnRemove f) {
+  std::vector<Node *> preceeds;
+  findPreceeds(k, preceeds);
+  auto may_eq = preceeds[0]->GetNext(0);
+  if (may_eq != nullptr && may_eq->Get() == k) {
+    int ed = may_eq->GetLevel();
+    for (int i = 0; i <= ed; i++) {
+      if (may_eq == preceeds[i]->GetNext(i)) {
+        preceeds[i]->SetNext(i, may_eq->GetNext(i));
+      }
+    }
+    if (f != nullptr)
+      f(may_eq->k_);
+    return true;
+  }
   return false;
 }
 
 template<typename Key>
 bool Skiplist<Key>::Search(Key &k, Skiplist<Key>::HookOnFound f) {
+  std::vector<Node *> preceeds;
+  findPreceeds(k, preceeds);
+  auto may_eq = preceeds[0]->GetNext(0);
+  if (may_eq != nullptr && may_eq->Get() == k) {
+    if (f != nullptr)
+      f(may_eq->Get(), k); // call user hook of hit
+    return true;
+  }
   return false;
 }
 
 template<typename Key>
-void Skiplist<Key>::DumpAsGraphvizScatch(bool node_full_id, std::string &r) {
+void Skiplist<Key>::DumpAsGraphvizScatch(bool node_full_ctn, std::string &r) {
   std::stringstream ss;
+  std::string header = "----dump as graphviz---\n\
+digraph {  \n\
+  rankdir=LR \n\
+  node [shape=record] \n\
+  nodesep=0",
+              tailer = "}", nprefix = "N", lprefix = "l";
+  ss << header << "\n";
+  // output node def
+  auto get_node_idstr = [this, nprefix, lprefix](Node *p, bool defname,
+                                                 bool full) -> std::string {
+    std::string nid = nprefix + std::to_string(p->GetId());
+    if (defname) {
+      nid += "[label=\"";
+      bool is_first = true;
+      for (int i = p->next_.size() - 1; i >= 0; i--) {
+        if (i <= curr_lvl_) {
+          std::string label = fmt::format("<{}{}>", lprefix, i);
+          label += i == 0 ? (p != head_ ? p->ToString(full) : "HEAD") : "*";
+
+          nid += (is_first ? label : (std::string("|") + label));
+          if (is_first) {
+            is_first = false;
+          }
+        }
+      }
+      nid += "\"]";
+    }
+    return nid;
+  };
+
+  // output node definitions
+  Node *i = head_;
+  while (i != nullptr) {
+    ss << get_node_idstr(i, true, node_full_ctn) << "\n";
+    i = i->GetNext(0);
+  }
+
+  // output node label relations
   for (int lvl = curr_lvl_; lvl >= 0; lvl--) {
     Node *itr = head_;
     bool is_first = true;
     while (itr != nullptr) {
-      std::string s = itr->ToString(node_full_id);
-
-      if (is_first) {
-        is_first = false;
-      } else {
-        ss << "->";
-      }
-      ss << s;
-
+      std::string srclabel = fmt::format(
+          "{}:{}{}", get_node_idstr(itr, false, node_full_ctn), lprefix, lvl);
       itr = itr->GetNext(lvl);
+      if (itr != nullptr) {
+        std::string dstlabel = fmt::format(
+            "{}:{}{}", get_node_idstr(itr, false, node_full_ctn), lprefix, lvl);
+        ss << srclabel << "->" << dstlabel << "\n";
+      }
     }
-    ss << "\n";
   }
+  ss << tailer << "\n";
   r = ss.str();
 }
 
@@ -209,7 +261,7 @@ int Skiplist<Key>::GetLevel() {
 
 template<typename Key>
 typename Skiplist<Key>::Node *Skiplist<Key>::newNode(Key k, int level) {
-  Node *n = new Node(level, k);
+  Node *n = new Node(level, k, node_count_++);
   alloc_track_.emplace_back(n);
   log_info("new add: k={}, lvl={}", n->Get(), n->GetLevel());
   return n;
@@ -245,7 +297,10 @@ void Skiplist<Key>::findPreceeds(Key k, std::vector<Node *> &r) {
 template<typename Key>
 class Skiplist<Key>::Node {
 public:
-  Node(int lvl, Key k) : k_(k), lvl_(lvl) { next_.resize(lvl_ + 1, nullptr); }
+  Node(int lvl, Key k, int nid) : k_(k), lvl_(lvl), id_(nid) {
+    next_.resize(lvl_ + 1, nullptr);
+  }
+  int GetId() { return id_; }
   Key Get() { return k_; }
   int GetLevel() { return lvl_; }
   // lvl: [0,lvl_ - 1]
@@ -266,13 +321,15 @@ public:
     return nullptr;
   }
   std::string ToString(bool full = false) {
-    return full ? fmt::format("N{}-{:p}", k_, (void *)this)
-                : fmt::format("N{}", k_);
+    return full ? fmt::format("{}-{:p}", k_, (void *)this)
+                : fmt::format("{}", k_);
   }
 
 private:
+  friend class Skiplist<Key>;
   Key k_;
   int lvl_;
+  int id_;
   std::vector<Node *> next_;
   // I'm prefer to use a vector than a struct hack
   // which may look like below:
@@ -283,5 +340,19 @@ private:
   //    };
   //    ```
   //
+};
+
+} // namespace utils
+} // namespace cp1craft
+
+
+// a formatter for SimpleKeyHandle
+template<>
+struct fmt::formatter<cp1craft::utils::SimpleKeyHandle> : fmt::formatter<std::string> {
+  template<typename FormatContext>
+  auto format(const cp1craft::utils::SimpleKeyHandle &skh, FormatContext &ctx)
+      -> decltype(ctx.out()) {
+    return fmt::formatter<std::string>::format(skh.ToString(false), ctx);
+  }
 };
 
