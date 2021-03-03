@@ -140,6 +140,15 @@ TEST(misc, nested_template_class ) {
 }
 
 
+/*
+ * TOPIC - bit op
+ * */
+TEST(misc, bitop) {
+  auto get_upper_aligned = [](int in, int aligned) -> int {
+    return (in & (~(aligned - 1))) + aligned;
+  };
+  log_info("{} -> {}", 29, get_upper_aligned(29, 15));
+}
 
 
 int main(int argc, char **argv) {

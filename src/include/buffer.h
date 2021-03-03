@@ -9,13 +9,13 @@ namespace io {
 //
 class Extent {
  public:
-  using uchar_t = unsigned char;
+  using UChar = unsigned char;
   // without a deleter
-  Extent(uchar_t *p, uint32_t l) : ptr_(p), len_(l), del_(nullptr) {}
+  Extent(UChar *p, uint32_t l) : ptr_(p), len_(l), del_(nullptr) {}
 
   // with a deleter whose type should be able to convert to `Extent::deleter`
   template <class Del>
-  Extent(uchar_t *p, uint32_t l, Del d) : ptr_(p), len_(l), del_(d) {}
+  Extent(UChar *p, uint32_t l, Del d) : ptr_(p), len_(l), del_(d) {}
 
   ~Extent() {
     if (ptr_ != nullptr && del_ != nullptr) {
@@ -32,41 +32,39 @@ class Extent {
   Extent &operator=(const Extent &) = delete;
 
  private:
-  using deleter = std::function<void(uchar_t *)>;
-  uchar_t *ptr_;
+  using deleter = std::function<void(UChar *)>;
+  UChar *ptr_;
   uint32_t len_;
   deleter del_;
 };
 
 // Buffer: a place to contain a frame of message.
-// a little similar to a "queue", the operation of a buffer is `put` and `peak`:
+// in FIFO fashion the operation of a Buffer is to `put` and `peek`:
 //   - `put` is to write something in at the end of this "buffer"
-//   - `peak` is to read something out from the front of this "buffer"
+//   - `peek` is to read something out from the front of this "buffer"
 //
 //   1) ops: put a, put b, put c, finish put
 //   2) content should be like: | a | b | c |
-//   3) 1st peak --> a (caller must know which type of data is needed.)
-//      2ed peak --> b
-//      3rd peak --> c
-//      4th peak --> failed_because_peak_is_finished
+//   3) 1st peek --> a (caller must know which type of data is needed.)
+//      2ed peek --> b
+//      3rd peek --> c
+//      4th peek --> failed_because_peek_is_finished
 //
 class Buffer {
  public:
-  using uchar_t = Extent::uchar_t;
-  virtual void PutUint32(uint32_t u);
-  virtual void PutString(const std::string &s);
-  virtual void PutBytes(uchar_t *p, uint32_t n);
+  using UChar = Extent::UChar;
+  
+  virtual void PutUint32(uint32_t u) = 0;
+  virtual void PutString(const std::string &s) = 0;
+  virtual void PutBytes(UChar *p, uint32_t n) = 0;
 
-  void FinishPut() { eof_put_ = true; }
-  bool IsPutFinished() { return eof_put_; }
+  virtual bool PeekUint32(uint32_t &x) = 0;
+  virtual bool PeekString(uint32_t n, std::string &s) = 0;
+  virtual bool PeekBytes(uint32_t n, UChar *p) = 0;
 
-  virtual void PeekUint32(uint32_t &x);
-  virtual void PeekBytes(uint32_t n, void *&p);
-  virtual void PeekString(std::string &s);
-  virtual bool IsPeakFinished();
-
-  static std::shared_ptr<Buffer> NewBuffer();
-  static std::shared_ptr<Buffer> NewBuffer(uint32_t sz, cp1craft::utils::LoggerPtr logger);
+  static std::shared_ptr<Buffer> NewBuffer(cp1craft::utils::LoggerPtr logger = cp1craft::utils::g_console);
+  
+  static constexpr const int kPreAllocSize = 64;
 
  private:
   bool eof_put_;

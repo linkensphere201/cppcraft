@@ -16,6 +16,8 @@ TEST(virtual, ShowTopic) {
 class tSomeModule {
 public:
   virtual void someinf() = 0;
+  bool sp;
+  tSomeModule() : sp(true) {}
 };
 
 std::shared_ptr<tSomeModule> NewModule();
@@ -26,7 +28,7 @@ public:
 };
 
 void tSomeImpl::someinf() {
-  log_info("simexxx...");
+  log_info("simexxx: {} ...", sp);
 }
 
 std::shared_ptr<tSomeModule> NewModule() {

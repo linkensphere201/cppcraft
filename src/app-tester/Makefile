@@ -15,7 +15,8 @@ LDFLAGS := -L$(mylib_dir) \
 	-L$(gtest_libdir) 			\
 	-L$(spdlog_libdir) 			\
 	-L$(rocksdb_libdir) 		\
-	-lcommon 								\
+	-lutils 								\
+	-lio    								\
 	-l$(gtest_lib) 					\
 	-l$(spdlog_lib) 				\
 	-l$(rocksdb_lib) 				\

@@ -8,6 +8,9 @@ DepRoot := $(CURDIR)/../../staticlibs
 mylib_dir := $(CURDIR)/../libs
 mylib_inc := $(CURDIR)/../include
 
+# my libs
+
+
 # 3rd party libs
 spdlog_lib := spdlog
 spdlog_dir := $(DepRoot)/spdlog-1.8.2

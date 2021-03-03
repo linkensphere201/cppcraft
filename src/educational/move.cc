@@ -7,7 +7,7 @@
 #include "log.h"
 
 void ShowTopic() {
-  log_info("Topic: " "move");
+  log_warn("Topic: " "move");
 }
 
 TEST(move, ShowTopic) {
