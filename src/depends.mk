@@ -31,3 +31,34 @@ fmt_lib := fmt
 fmt_dir := $(DepRoot)/fmt
 fmt_inc := $(fmt_dir)/include
 fmt_libdir := $(fmt_dir)/lib64
+
+# not use for now
+libhv_lib := hv
+libhv_dir := $(DepRoot)/libhv
+libhv_inc := $(libhv_dir)/include
+libhv_libdir := $(libhv_dir)/lib
+
+libevent_lib := event
+libevent_dir := $(DepRoot)/libevent
+libevent_inc := $(libevent_dir)/include
+libevent_libdir := $(libevent_dir)/lib
+libevent_static_files := $(shell ls $(libevent_libdir)/*.a)
+
+MYCXXFLAGS := -std=c++11 -O0 -ggdb  \
+  -I$(mylib_inc)                  	\
+  -I$(gtest_inc)                  	\
+  -I$(spdlog_inc)                 	\
+  -I$(rocksdb_inc)									
+
+MYLDFLAGS := $(libevent_static_files) \
+	-L$(mylib_dir) \
+  -L$(gtest_libdir)       	\
+  -L$(spdlog_libdir)      	\
+  -L$(rocksdb_libdir)     	\
+  -lutils                 	\
+  -lio                    	\
+  -l$(gtest_lib)          	\
+  -l$(spdlog_lib)         	\
+  -l$(rocksdb_lib)        	\
+  -lpthread               	\
+  -ldl

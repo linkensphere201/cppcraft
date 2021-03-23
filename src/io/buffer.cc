@@ -13,6 +13,7 @@ namespace io {
 //
 class BufferImpl : public Buffer {
   using logger = cp1craft::utils::LoggerPtr;
+  const size_t kAlignment = 32;
 
 public:
   BufferImpl(logger log = nullptr);
@@ -30,7 +31,8 @@ private:
   UChar *head();
 
   bool acquire_peek_nbytes(uint32_t nbytes);
-  void addup_peek_nbytes(uint32_t nbytes) { has_peek_ += nbytes; }
+  void peek(uint32_t nbytes) { has_peek_ += nbytes; }
+  void internal_info();
 
   std::vector<UChar> rep_;
   size_t has_put_;
@@ -39,21 +41,27 @@ private:
   logger logger_;
 };
 
+void BufferImpl::internal_info() {
+  if (logger_) {
+    logger_->info("{} {}", has_put_, has_peek_);
+  }
+}
+
 BufferImpl::BufferImpl(logger log) : rep_(Buffer::kPreAllocSize), has_put_(0), has_peek_(0), logger_(log) {
 }
 
 void BufferImpl::acquire_put_nbytes(int nbytes) {
   if (rep_.size() + nbytes > rep_.capacity()) {
-    size_t align = 32;
     size_t tgtsz = rep_.size() + nbytes;
-    tgtsz &= (~(align - 1));
-    tgtsz += align;
+    tgtsz &= (~(kAlignment - 1));
+    tgtsz += kAlignment;
     assert(tgtsz > rep_.capacity());
-    rep_.resize(tgtsz);
+    rep_.reserve(tgtsz);
   }
 }
 void BufferImpl::append(const UChar *d, int nbytes) {
   acquire_put_nbytes(nbytes);
+  assert(rep_.capacity() - has_put_ >= nbytes);
   memcpy(head() + has_put_, d, nbytes);
   has_put_ += nbytes;
 }
@@ -61,7 +69,7 @@ void BufferImpl::append(const UChar *d, int nbytes) {
 Buffer::UChar *BufferImpl::head() { return &rep_[0]; }
 
 bool BufferImpl::acquire_peek_nbytes(uint32_t n) {
-  size_t sz = rep_.size();
+  size_t sz = has_put_;
   sz = sz > has_peek_ ? (sz - has_peek_) : 0;
   return sz >= n;
 }
@@ -69,6 +77,8 @@ bool BufferImpl::acquire_peek_nbytes(uint32_t n) {
 #include <arpa/inet.h> // for linux
 void BufferImpl::PutUint32(uint32_t u) {
   uint32_t nw = htonl(u);
+  // if (logger_) { logger_->info("put: {}", u); }
+  // internal_info();
   append(reinterpret_cast<UChar *>(&nw), sizeof(uint32_t));
 }
 
@@ -84,7 +94,9 @@ bool BufferImpl::PeekUint32(uint32_t &x) {
     uint32_t n;
     memcpy(reinterpret_cast<UChar *>(&n), topeek, sizeof(uint32_t));
     x = ntohl(n);
-    addup_peek_nbytes(sizeof(uint32_t));
+    peek(sizeof(uint32_t));
+    // if (logger_) { logger_->info("peek: {}", x); }
+    // internal_info();
     return true;
   }
   return false;
@@ -93,7 +105,7 @@ bool BufferImpl::PeekString(uint32_t n, std::string &s) {
   if (acquire_peek_nbytes(n)) {
     UChar *topeek = head() + has_peek_;
     s = std::string(reinterpret_cast<const char*>(topeek), n);
-    addup_peek_nbytes(n);
+    peek(n);
     return true;
   }
   return false;
@@ -102,7 +114,7 @@ bool BufferImpl::PeekBytes(uint32_t n, UChar *p) {
   if (acquire_peek_nbytes(n)) {
     UChar *topeek = head() + has_peek_;
     memcpy(p, topeek, n);
-    addup_peek_nbytes(n);
+    peek(n);
     return true;
   }
   return false;

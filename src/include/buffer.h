@@ -50,6 +50,7 @@ class Extent {
 //      3rd peek --> c
 //      4th peek --> failed_because_peek_is_finished
 //
+class StreamOp;
 class Buffer {
  public:
   using UChar = Extent::UChar;
@@ -67,7 +68,18 @@ class Buffer {
   static constexpr const int kPreAllocSize = 64;
 
  private:
+  friend class  StreamOp;
+  const UChar*  oBuf();
+  uint32_t      oLimit();
+
   bool eof_put_;
+};
+
+class StreamOp {
+public:
+  virtual void Bind(Buffer *) = 0;
+  virtual bool Out(const Buffer::UChar*, uint32_t) = 0;
+  virtual bool In(Buffer::UChar*, uint32_t) = 0;
 };
 
 }  // namespace io

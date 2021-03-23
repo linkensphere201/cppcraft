@@ -7,3 +7,9 @@
 [submodule "thirdparty/sources/fmt"]
 	path = thirdparty/sources/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "thirdparty/sources/libhv"]
+	path = thirdparty/sources/libhv
+	url = https://github.com/ithewei/libhv.git
+[submodule "thirdparty/sources/libevent"]
+	path = thirdparty/sources/libevent
+	url = https://github.com/libevent/libevent.git

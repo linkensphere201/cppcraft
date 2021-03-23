@@ -1,6 +1,8 @@
 include ../depends.mk
+include ../depends_tests.mk
 
 SRCS := $(shell ls *.cc)
+SRCS := $(filter-out $(TESTS_SRCS), $(SRCS))
 OBJS := $(SRCS:.cc=.o)
 
 CXX       := g++
@@ -24,3 +26,12 @@ $(OBJS): %.o:%.cc
 $(OUTPUT): $(OBJS)
 	$(AR) cr $@ $^
 	@cp $@ $(mylib_dir)
+
+$(TESTS_OBJS): %.o:%.cc
+	$(CXX) -c $^ $(MYCXXFLAGS)
+
+$(TESTS_TGTS): %.out:%.o
+	$(CXX) -o $@ $^ $(MYLDFLAGS)
+
+clean:
+	rm -f $(OUTPUT) $(TESTS_TGTS) *.o
