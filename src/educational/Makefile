@@ -24,7 +24,7 @@ LDFLAGS  	:= -L$(mylib_dir)		\
 all: $(EXES)
 
 $(EXES): %.out:%.cc
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(MYLDFLAGS)
 
 .PHONY:
 clean:

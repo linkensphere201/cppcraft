@@ -21,8 +21,6 @@ lib_gperftools := gperftools
 
 lib_fmt := fmt
 
-lib_hv := libhv
-
 lib_libevent := libevent
 
 all: prepare curl spdlog protobuf rocksdb gtest gperftools libhv libevent
@@ -89,14 +87,6 @@ fmt:
 	mkdir -p $(builddir)/$(lib_fmt)
 	mkdir -p $(targetdir)/$(lib_fmt)
 	cd $(builddir)/$(lib_fmt); cmake $(basedir)/$(lib_fmt) -DCMAKE_INSTALL_PREFIX=$(targetdir)/$(lib_fmt) && make && make install
-
-libhv:
-	@echo "build : $(lib_hv)"
-	@echo "target: $(targetdir)/$(lib_hv)"
-	mkdir -p $(targetdir)/$(lib_hv)
-	cd $(basedir)/$(lib_hv) && ./configure && make
-	cp -r $(basedir)/$(lib_hv)/lib $(targetdir)/$(lib_hv)
-	cp -r $(basedir)/$(lib_hv)/include $(targetdir)/$(lib_hv)
 
 libevent:
 	@echo "build : $(lib_libevent)"
