@@ -150,6 +150,20 @@ TEST(misc, bitop) {
   log_info("{} -> {}", 29, get_upper_aligned(29, 15));
 }
 
+void bar(int &a) {
+  a = 1919;
+}
+template<typename T>
+void foo(T&& a) {
+  bar(static_cast<T&&>(a));
+} 
+TEST(misc, a) {
+  int x = 100;
+  log_info("before foo: x's value is {}", x);
+  foo(x);
+  log_info("after foo: x's value is {}", x);
+}
+
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
