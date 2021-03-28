@@ -164,6 +164,47 @@ TEST(misc, a) {
   log_info("after foo: x's value is {}", x);
 }
 
+#define PRINT(a) log_info("{}", a)
+class C{
+public:
+    C() {
+        PRINT("default");
+    }
+    C(C &&c) {
+        PRINT("move construct");
+    }
+};
+
+void func(C c) {
+    PRINT((void*)&c);
+}
+
+TEST(misc, b) {
+    C c;
+    C &&cc = std::move(c);
+    PRINT((void*)&c);
+    PRINT((void*)&cc);
+
+    C c2;
+    PRINT("-------");
+    func(std::move(c2));
+    PRINT((void*)&c2);
+}
+
+#include <memory>
+struct AAx {
+  ~AAx() {
+    log_info("!~~~~");
+  }
+  std::shared_ptr<AAx> getretval() {
+    return std::shared_ptr<AAx>(this);
+  }
+};
+
+TEST(misc, sharedptr) {
+  AAx a1;
+  std::shared_ptr<AAx> pa = a1.getretval(); // try to get a shared_ptr from myself
+}
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
