@@ -4,7 +4,6 @@
 
 namespace cp1craft {
 namespace utils {
-
 namespace tuple_unpack_helper {
 
 // for c++11

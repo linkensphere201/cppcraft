@@ -1,30 +1,9 @@
-// keywords: template_check
-//
-
 #include "log.h"
-
-#include "event2/event.h"
-#include "event2/listener.h"
-#include "event2/util.h"
-
 #include "looper.hpp"
 #include "utils.h"
-
 #include <gtest/gtest.h>
-#include <iostream>
-#include <memory>
-#include <tuple>
-#include <type_traits>
 
-
-void ShowTopic() {
-  log_info("Topic: "
-           "template_check");
-}
-
-TEST(template_check, ShowTopic) { ShowTopic(); }
-
-TEST(template_check, tuple_unpack) {
+TEST(looper, callable) {
   auto f1 = [](int a, int b, int c, int d) {
     log_info("called! {}-{}-{}-{}", a, b, c, d);
   };
@@ -32,21 +11,11 @@ TEST(template_check, tuple_unpack) {
   c.call();
 }
 
-TEST(template_check, CallableEvent) {
-  auto c = cp1craft::io::make_CallableEvent(
-      (struct event_base*)nullptr, nullptr, 0, 0,
-      [](int fd, short flags, int a, int b) {
-        log_info("it happened! {},{}", a, b);
-      },
-      10, 20);
-  c->Trigger(0, 0);
-}
-
-TEST(template_check, libevent) {
+TEST(looper, event) {
   struct event_base *evbase = event_base_new();
   int calltimes = 0;
   auto e = cp1craft::io::make_CallableEvent(
-      evbase, cp1craft::utils::g_console, 0/*stdin*/, cp1craft::io::PersisReadableFlags(),
+      evbase, cp1craft::utils::g_console, 0 /*stdin*/, cp1craft::io::PersisReadableFlags(),
       [](int fd, short flags, int &calltimes) {
         char letter;
         int n = read(fd, &letter, 1);
@@ -58,6 +27,28 @@ TEST(template_check, libevent) {
 
   e->Enable();
   event_base_dispatch(evbase);
+}
+
+TEST(looper, looper) {
+  cp1craft::io::Looper l;
+
+  int calltimes = 0;
+  auto e = cp1craft::io::make_CallableEvent(
+      &l, 0, cp1craft::io::PersisReadableFlags(),
+      [](int fd, short flags, int &calltimes, cp1craft::io::Looper *lp) {
+        char letter;
+        int n = read(fd, &letter, 1);
+        log_info("fd={}, caught event={}, calltime={}, letter={:#x}", fd, flags,
+                 calltimes, letter);
+        calltimes++;
+        if (lp && calltimes > 20) {
+          log_info("recv {} bytes, byebye...", calltimes);
+          lp->StopLoop();
+        }
+      },
+      calltimes, &l);
+  e->Enable();
+  l.StartLoop();
 }
 
 int main(int argc, char **argv) {
