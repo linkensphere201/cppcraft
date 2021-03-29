@@ -1,5 +1,7 @@
 #include "posix_ops.h"
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <fmt/core.h>
 #include <sys/socket.h>
@@ -25,29 +27,131 @@ bool CreateSocket(int socket_family, int socket_type, int protocol, int &sockfd,
 //
 // create a socket connected to a @ip:@port within @timeout ms.
 //
-bool CreateTcpSocketforConnect(const std::string &ip, int port,
+bool CreateTcpSocketandConnect(const std::string &ip, int port,
                                int conn_timeout, bool nonblock, int &fd,
                                status &s) {
   TcpAddrInfo addr(ip, port, s);
   if (!addr.OK()) {
     goto ERR_ADDRHINT;
   }
-  fd = addr.sockfd;
-  if (!SetSocketNonblock(fd, true, s)) {
+  if (!SetSocketNonblock(addr.sockfd, true, s)) {
     goto ERR_SETNONBLOCK;
   }
 
+  int ret;
+  ret = connect(addr.sockfd, addr.info->ai_addr, addr.info->ai_addrlen);
+  if (ret == -1) {
+    if (errno == EINPROGRESS) {
+      if (!PollSocket(addr.sockfd, addr.info, s)) {
+        goto ERR_CONN;
+      }
+    } else {
+      SysCallErrRecoder(connect, s);
+      goto ERR_CONN;
+    }
+  }
+  if (!nonblock && !SetSocketNonblock(addr.sockfd, false, s)) {
+    goto ERR_SETBLOCK;
+  }
+  
+  fd = addr.sockfd;
+  return true;
 
+
+ERR_SETBLOCK:
+ERR_CONN:
 ERR_SETNONBLOCK:
-  if (fd > 0) {
-    close(fd);
-    fd = -1;
+  if (addr.sockfd > 0) {
+    close(addr.sockfd);
+    addr.sockfd = -1;
   }
 ERR_ADDRHINT:
   return false;
 }
-bool CreateSocketforListen(bool reuse, int &fd);
-bool BindPort(int fd, int port_start, int max_retry, int &port);
+bool CreateSocketforListen(bool reuse, int &fd, status &s) {
+  int sockfd = -1;
+  if (!CreateSocket(AF_INET, SOCK_STREAM, 0, sockfd, s)) {
+    goto ERR_SOCK;
+  }
+  if (!SetSocketNonblock(sockfd, true, s)) {
+    goto ERR_SETNONBLOCK;
+  }
+  int flags = 1;
+  std::vector<int> optnames;
+  optnames.push_back(SO_KEEPALIVE);
+
+#if defined(SO_REUSEADDR)
+  optnames.push_back(SO_REUSEADDR);
+#endif
+
+#if defined(SO_REUSEPORT)
+  optnames.push_back(SO_REUSEPORT);
+#endif
+
+  int rc;
+  for (auto sopt : optnames) {
+    if (sopt == SO_REUSEPORT && !reuse) {
+      continue;
+    }
+    rc = setsockopt(fd, SOL_SOCKET, sopt, (void*)&flags, (socklen_t)sizeof(flags));
+    if (rc != 0) {
+      SysCallErrRecoder(setsockopt, s);
+      s << ", opt=" << sopt << ", flags=" << flags;
+      goto ERR_SETSOCKOPT;
+    }
+  }
+
+  fd = sockfd;
+  return true;
+
+ERR_SETSOCKOPT:
+ERR_SETNONBLOCK:
+  if (sockfd > 0) {
+    close(sockfd);
+    sockfd = -1;
+  }
+ERR_SOCK:
+  return false;
+}
+
+bool CreateTcpSocketandBindPort(int port_start, int max_retry, int interval, int &fd, int &sockport, status &s) {
+  int sockfd = -1;
+  if (!CreateTcpSocketforListen(false, sockfd, s)) {
+    return false;
+  }
+  struct sockaddr_in sin;
+  memset(&sin, 0, sizeof(struct sockaddr_in));
+  sin.sin_family = AF_INET;
+  sin.sin_addr.s_addr = htonl(0);
+
+  int port = port_start, attempts = 0;
+  do {
+    sin.sin_port = htons(port);
+    int rc = bind(sockfd, (struct sockaddr *)&sin, sizeof(sin));
+    if (rc == 0) {
+      fd = sockfd;
+      sockport = port;
+      return true;
+    }
+    if (rc != 0 && errno != EADDRINUSE) {
+      SysCallErrRecoder(bind, s);
+      s << ",fd=" << sockfd;
+      goto ERR_BIND;
+    }
+
+    usleep(interval); 
+    port++;
+    attempts++;
+    max_retry--;
+  } while(max_retry > 0);
+
+ERR_BIND:
+  if (sockfd > 0) {
+    close(sockfd);
+    sockfd = -1;
+  }
+  return false;
+}
 
 bool SetSocketNonblock(int fd, bool nonblock, status &s) {
   int flags;
@@ -70,8 +174,49 @@ bool SetSocketNonblock(int fd, bool nonblock, status &s) {
   return true;
 }
 
+bool PollSocket(int fd, int timeout/*in ms*/, struct addrinfo *info, status &s) {
+  struct pollfd wfd[1];
+  wfd[0].fd = fd;
+  wfd[0].events = POLLOUT;
+
+  int rc = poll(wfd, 1, timeout);
+  if (rc == -1) {
+    SysCallErrRecoder(poll, s);
+    s << ",fd=" << fd << ",poll_timeout=" << timeout;
+    return false;
+  }
+  if (rc == 0) {
+    s << "connection timeout: " << strerror(ETIMEDOUT);
+    return false;
+  }
+  
+  // copy sockaddr
+  struct sockaddr *socka = (struct sockaddr *)malloc(info->ai_addrlen);
+  if (socka == nullptr) {
+    SysCallErrRecoder(malloc, s);
+    return false;
+  }
+  memcpy(socka, info->ai_addr, info->ai_addrlen);
+  
+  bool ret = false;
+  rc = connect(fd, (const struct sockaddr *)ai_addr, ai_addrlen);
+  if (rc == 0)  {
+    ret = true;
+  } else if (errno == EISCONN) {
+    ret = true;
+  } else if (errno == EALREADY || errno == EINPROGRESS || errno == EWOULDBLOCK) {
+    s << "connection timeout: " << strerror(ETIMEDOUT);
+  } else {
+    s << "connection failed: " << strerror(errno);
+  }
+  if (socka) {
+    free(socka);
+  }
+  return ret;
+}
+
 TcpAddrInfo::TcpAddrInfo(const std::string &ip, int port, status &s)
-    : info(nullptr), socka(nullptr), socka_len(0), sockfd(-1) {
+    : info(nullptr), sockfd(-1) {
   struct addrinfo hints;
   char _port[8];
   snprintf(_port, 8, "%d", port);
@@ -88,15 +233,6 @@ TcpAddrInfo::TcpAddrInfo(const std::string &ip, int port, status &s)
     return;
   }
 
-  // sockaddr
-  socka = (struct sockaddr *)malloc(info->ai_addrlen);
-  if (socka == nullptr) {
-    SysCallErrRecoder(malloc, s);
-    return;
-  }
-  memcpy(socka, info->ai_addr, info->ai_addrlen);
-  socka_len = info->ai_addrlen;
-
   if (!CreateSocket(info->ai_family, info->ai_socktype, info->ai_protocol,
                     sockfd, s)) {
     sockfd = -1;
@@ -107,9 +243,6 @@ TcpAddrInfo::TcpAddrInfo(const std::string &ip, int port, status &s)
 TcpAddrInfo::~TcpAddrInfo() {
   if (info) {
     freeaddrinfo(info);
-  }
-  if (socka) {
-    free(socka);
   }
 }
 
