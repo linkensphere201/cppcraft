@@ -48,6 +48,7 @@ MYCXXFLAGS := -std=c++11 -O0 -ggdb  \
   -I$(mylib_inc)                  	\
   -I$(gtest_inc)                  	\
   -I$(spdlog_inc)                 	\
+	-I$(fmt_inc)											\
   -I$(rocksdb_inc)									
 
 MYLDFLAGS := $(libevent_static_files) \
@@ -55,10 +56,12 @@ MYLDFLAGS := $(libevent_static_files) \
   -L$(gtest_libdir)       	\
   -L$(spdlog_libdir)      	\
   -L$(rocksdb_libdir)     	\
+	-L$(fmt_libdir)						\
   -lutils                 	\
   -lio                    	\
   -l$(gtest_lib)          	\
   -l$(spdlog_lib)         	\
   -l$(rocksdb_lib)        	\
+	-l$(fmt_lib)							\
   -lpthread               	\
   -ldl
