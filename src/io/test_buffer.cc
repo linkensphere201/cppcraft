@@ -49,7 +49,6 @@ TEST(basic, bytesarray) {
   for (auto i : inputs) {
     b->PutUint32(i);
   }
-
 }
 
 

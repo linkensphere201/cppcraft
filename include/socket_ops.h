@@ -5,8 +5,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-
-
 namespace cp1craft {
 namespace io {
 

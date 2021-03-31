@@ -59,10 +59,10 @@ public:
   }
 
 private:
-  struct event_base *ev_base_;
-  int fd_;
-  short flags_;
-  struct event *ev_;
+  struct event_base *        ev_base_;
+  int                        fd_;
+  short                      flags_;
+  struct event *             ev_;
   cp1craft::utils::LoggerPtr logger_;
   static void LibeventCallback(int fd /**/, short flag, void *arg);
 };
@@ -84,12 +84,12 @@ template<typename Fn, typename... Args>
 class CallableEvent : public InternalEvent<CallableEvent<Fn, Args...>> {
 private:
   using internalevent = InternalEvent<CallableEvent<Fn, Args...>>;
-  using signature = void(int, short, Args...);
+  using signature     = void(int, short, Args...);
   static_assert(std::is_convertible<Fn &&, std::function<signature>>::value,
                 "required callback forms: void(int, short, Args...)..");
 
-  std::function<signature> ufn_; // user callback
-  std::tuple<Args...> uargs_;    // user parameters
+  std::function<signature> ufn_;   // user callback
+  std::tuple<Args...>      uargs_; // user parameters
 public:
   //
   // call this means I am interesting with @fd 's @flags events, if that
@@ -102,7 +102,7 @@ public:
         uargs_(std::forward<Args>(args)...) /*parameters unpack*/ {}
 
   CallableEvent(const CallableEvent<Fn, Args...> &) = delete;
-  CallableEvent(CallableEvent<Fn, Args...> &&) = delete;
+  CallableEvent(CallableEvent<Fn, Args...> &&)      = delete;
 
   void Trigger(int fd, short flags) {
     call_user_callback(fd, flags,
@@ -139,12 +139,12 @@ public:
     return ev_base_;
   }
   cp1craft::utils::LoggerPtr GetLogger() { return logger_; }
-  bool StartLoop();
-  bool StopLoop();
+  bool                       StartLoop();
+  bool                       StopLoop();
 
 private:
   cp1craft::utils::LoggerPtr logger_;
-  struct event_base *ev_base_;
+  struct event_base *        ev_base_;
 };
 
 Looper::Looper(cp1craft::utils::LoggerPtr logger)
@@ -270,9 +270,9 @@ public:
   }
 
 private:
-  struct event_base *ev_base_;
-  int listen_fd_;
-  struct evconnlistener *ec_listener_;
+  struct event_base *        ev_base_;
+  int                        listen_fd_;
+  struct evconnlistener *    ec_listener_;
   cp1craft::utils::LoggerPtr logger_;
 
   void LibeventListenCallback(struct evconnlistener *, evutil_socket_t,
@@ -294,15 +294,15 @@ void InternalListener<Listener>::LibeventListenCallback(
 template<typename Fn, typename... Args>
 class Listener : InternalListener<Listener<Fn, Args...>> {
 private:
-  using signature = void(struct evconnlistener *, int /*connfd*/,
+  using signature        = void(struct evconnlistener *, int /*connfd*/,
                          struct sockaddr * /*src addr*/, int, Args...);
   using internallistener = InternalListener<Listener>;
   static_assert(
       std::is_convertible<Fn &&, std::function<signature>>::value,
       "required callback forms: void(struct evconnlistener *, int /*connfd*/, "
       "struct sockaddr * /*src addr*/, int , Args...)..");
-  std::function<signature> ufn_; // user callback
-  std::tuple<Args...> uargs_;    // user parameters
+  std::function<signature> ufn_;   // user callback
+  std::tuple<Args...>      uargs_; // user parameters
 public:
   Listener(struct event_base *base, int listenfd, int flags, int backlog,
            cp1craft::utils::LoggerPtr logger, Fn &&fn, Args &&... args)
@@ -310,7 +310,7 @@ public:
         ufn_(std::forward<Fn>(fn)), uargs_(std::forward<Args>(args)...) {}
 
   Listener(const Listener<Fn, Args...> &) = delete;
-  Listener(Listener<Fn, Args...> &&) = delete;
+  Listener(Listener<Fn, Args...> &&)      = delete;
 
   void Trigger(struct evconnlistener *listener, int newfd,
                struct sockaddr *sockaddr, int socklen) {
