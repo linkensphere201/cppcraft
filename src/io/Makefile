@@ -17,11 +17,11 @@ OUTPUT := "lib$(shell basename $(CURDIR)).a"
 all: prepare $(OUTPUT)
 
 prepare:
-	@echo $(OUTPUT)
+	@echo "building $(OUTPUT)"
 	mkdir -p $(mylib_dir)
 
 $(OBJS): %.o:%.cc
-	$(CXX) -o $@ -c $^ $(CXXFLAGS)
+	$(CXX) -o $@ -c $^ $(MYCXXFLAGS)
 
 $(OUTPUT): $(OBJS)
 	$(AR) cr $@ $^

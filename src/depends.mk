@@ -6,7 +6,7 @@ DepRoot := $(CURDIR)/../../staticlibs
 
 # my libs
 mylib_dir := $(CURDIR)/../libs
-mylib_inc := $(CURDIR)/../include
+mylib_inc := $(CURDIR)/../../include
 
 # my libs
 
