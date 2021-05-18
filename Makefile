@@ -23,7 +23,7 @@ lib_fmt := fmt
 
 lib_libevent := libevent
 
-all: prepare curl spdlog protobuf rocksdb gtest gperftools libhv libevent
+all: prepare curl spdlog protobuf rocksdb gtest gperftools libevent
 	@tree $(targetdir)
 
 prepare:
@@ -43,7 +43,7 @@ spdlog:
 	@echo "target: $(targetdir)/$(lib_spdlog)"
 	mkdir -p $(targetdir)/$(lib_spdlog)
 	unzip $(basedir)/$(src_spdlog) -d $(builddir)
-	cd $(builddir)/$(lib_spdlog) && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=$(targetdir)/$(lib_spdlog) ..
+	cd $(builddir)/$(lib_spdlog) && mkdir -p build && cd build && cmake -DCMAKE_INSTALL_PREFIX=$(targetdir)/$(lib_spdlog) ..
 	make -C $(builddir)/$(lib_spdlog)/build -j 4 && make -C $(builddir)/$(lib_spdlog)/build install
 
 protobuf:
