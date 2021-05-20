@@ -47,8 +47,8 @@ void BufferImpl::internal_info() {
   }
 }
 
-BufferImpl::BufferImpl(logger log) : rep_(Buffer::kPreAllocSize), has_put_(0), has_peek_(0), logger_(log) {
-}
+BufferImpl::BufferImpl(logger log)
+    : rep_(Buffer::kPreAllocSize), has_put_(0), has_peek_(0), logger_(log) {}
 
 void BufferImpl::acquire_put_nbytes(int nbytes) {
   if (rep_.size() + nbytes > rep_.capacity()) {
@@ -104,7 +104,7 @@ bool BufferImpl::PeekUint32(uint32_t &x) {
 bool BufferImpl::PeekString(uint32_t n, std::string &s) {
   if (acquire_peek_nbytes(n)) {
     UChar *topeek = head() + has_peek_;
-    s = std::string(reinterpret_cast<const char*>(topeek), n);
+    s = std::string(reinterpret_cast<const char *>(topeek), n);
     peek(n);
     return true;
   }
@@ -126,4 +126,3 @@ std::shared_ptr<Buffer> Buffer::NewBuffer(cp1craft::utils::LoggerPtr logger) {
 
 } // namespace io
 } // namespace cp1craft
-
