@@ -44,6 +44,9 @@ libevent_inc := $(libevent_dir)/include
 libevent_libdir := $(libevent_dir)/lib
 libevent_static_files := $(shell ls $(libevent_libdir)/*.a)
 
+libqueue_dir := $(DepRoot)/queues
+libqueue_inc := $(libqueue_dir)/include
+
 MYCXXFLAGS := -std=c++11 -O0 -ggdb  \
   -I$(mylib_inc)                  	\
   -I$(gtest_inc)                  	\

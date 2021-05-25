@@ -23,6 +23,8 @@ lib_fmt := fmt
 
 lib_libevent := libevent
 
+lib_queues := queues
+
 all: prepare curl spdlog protobuf rocksdb gtest gperftools libevent
 	@tree $(targetdir)
 
@@ -94,6 +96,10 @@ libevent:
 	mkdir -p  $(targetdir)/$(lib_libevent)
 	mkdir -p 	$(builddir)/$(lib_libevent)
 	cd $(builddir)/$(lib_libevent); cmake $(basedir)/$(lib_libevent) -DCMAKE_INSTALL_PREFIX=$(targetdir)/$(lib_libevent) && make && make install
+
+queue:
+	mkdir -p $(targetdir)/$(lib_queues)
+	cp -r $(basedir)/$(lib_queues)/include $(targetdir)/$(lib_queues)
 
 .PTHONY:
 clean:

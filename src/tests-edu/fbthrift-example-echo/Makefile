@@ -1,6 +1,6 @@
 SRCS := $(shell ls echo/gen-cpp2/*.cpp ./*.cpp)
 OBJS := $(SRCS:.cpp=.o)
-CXX       := c++
+CXX       := /usr/bin/c++
 AR        := ar
 
 MYCXXFLAGS  := -std=c++17 -ggdb \
@@ -10,16 +10,14 @@ MYCXXFLAGS  := -std=c++17 -ggdb \
 	-frtti
 
 MYLDF := -lwangle \
--lfizz \
--lgflags \
--lglog \
--lfmt \
--laio \
 -lfolly \
 -lasync -lthriftprotocol -ltransport -lconcurrency -lthriftfrozen2 -lthrift-core -lrpcmetadata -lthriftmetadata \
 -lfolly \
 -lthriftcpp2 \
+-lconcurrency -lasync -lthriftprotocol -ltransport \
 -lwangle \
+-lfolly \
+-lfizz -lgflags -lglog -lfmt -laio \
 -lboost_context -lboost_program_options -lboost_thread -lboost_filesystem -lboost_system -lboost_regex -lboost_chrono \
 -llzma -lz -lsnappy -llz4 -lzstd -lbz2 \
 -lpthread \
