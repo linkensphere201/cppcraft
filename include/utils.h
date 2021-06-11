@@ -18,6 +18,13 @@ struct gen_seq<0, Is...> {
   typedef index<Is...> type;
 };
 
+
+// gen_seq<3>
+//      gen_seq<2, 2>
+//          gen_seq<1, 1, 2>
+//                  gen_seq<0, 0, 1, 2>
+//                             index<0, 1, 2>
+
 template<typename Fn, typename... Args>
 struct callable {
   callable(Fn &&f, Args &&... a)

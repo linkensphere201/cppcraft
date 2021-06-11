@@ -44,8 +44,20 @@ TEST(testvirtual, sol) {
   TestVirtual();
 }
 
+class CC {
+public:
+    CC() : CC(1) {}
+    CC(int f) {
+        log_info("im fucked: {} ...", f);
+    }
+};
+
+TEST(CC, Con) {
+    CC c1;
+}
+
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
-  cp1craft::utils::init_log_module(); 
+  cp1craft::utils::init_log_module();
   return RUN_ALL_TESTS();
 }

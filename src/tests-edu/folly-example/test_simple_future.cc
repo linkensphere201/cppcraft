@@ -1,8 +1,8 @@
-#include <memory>
-#include <thread>
 #include <folly/MPMCQueue.h>
 #include <folly/futures/Future.h>
 #include <folly/portability/GTest.h>
+#include <memory>
+#include <thread>
 
 #include "log.h"
 #include "utils.h"
@@ -22,16 +22,15 @@ struct ctx {
   int b;
   Promise<int> res;
   ctx() noexcept {}
-  ctx(int a_, int b_, Promise<int> && p) noexcept : a(a_), b(b_), res(std::move(p)) {}
-  ctx(ctx&& c) noexcept : a(c.a), b(c.b), res(std::move(c.res)) {}
+  ctx(int a_, int b_, Promise<int> &&p) noexcept
+      : a(a_), b(b_), res(std::move(p)) {}
+  ctx(ctx &&c) noexcept : a(c.a), b(c.b), res(std::move(c.res)) {}
 };
 
-void operate(ctx &c) {
-  c.res.setValue(c.a + c.b);
-}
+void operate(ctx &c) { c.res.setValue(c.a + c.b); }
 
 void Reactor(folly::MPMCQueue<std::shared_ptr<ctx>> &q) {
-  while(1) {
+  while (1) {
     std::shared_ptr<ctx> c1;
     if (q.read(c1)) {
       log_info("operate 1 ctx...");
@@ -47,7 +46,8 @@ void Reactor(folly::MPMCQueue<std::shared_ptr<ctx>> &q) {
   }
 }
 
-folly::Future<int> Submit(int a, int b, folly::MPMCQueue<std::shared_ptr<ctx>> &q) {
+folly::Future<int> Submit(int a, int b,
+                          folly::MPMCQueue<std::shared_ptr<ctx>> &q) {
   Promise<int> p;
   auto r = p.getFuture();
   auto c = std::make_shared<ctx>(a, b, std::move(p));
@@ -61,12 +61,12 @@ folly::Future<int> Submit(int a, int b, folly::MPMCQueue<std::shared_ptr<ctx>> &
 TEST(Future, threaded) {
   folly::MPMCQueue<std::shared_ptr<ctx>> cq(100);
   std::thread(Reactor, std::ref(cq)).detach();
-  
+
   log_info("wait 5 secs...");
   std::this_thread::sleep_for(std::chrono::seconds(5));
-  
+
   auto r = Submit(1, 2, cq);
-  while(1) {
+  while (1) {
     if (r.isReady()) {
       log_info("done: {}", r.value());
       Submit(0, 0, cq); // tell reactor to turn off
@@ -76,6 +76,26 @@ TEST(Future, threaded) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   }
+}
+
+#include <folly/executors/IOThreadPoolExecutor.h>
+
+TEST(IOThreadPool, threadpool) {
+  auto p = std::make_shared<folly::IOThreadPoolExecutor>(
+      3, std::make_shared<folly::NamedThreadFactory>("test-thread-pool"));
+
+  folly::via(p->getEventBase(),
+             []() {
+                int a = 3;
+                while (a > 0) {
+                    log_info("im running, but i don't know wtf...");
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    a--;
+                }
+             });
+
+  log_info("main thread would wait");
+  p->join();
 }
 
 int main(int argc, char **argv) {

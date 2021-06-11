@@ -4,7 +4,7 @@ EXES 		:= $(EXESRCS:.cc=.out)
 include ../depends.mk
 
 CXX 			:= g++
-CXXFLAGS 	:= -std=c++11 -O0 -ggdb \
+CXXFLAGS 	:= -std=c++17 -O0 -ggdb \
 	-fno-elide-constructors \
 	-I$(mylib_inc)		\
 	-I$(spdlog_inc)		\
